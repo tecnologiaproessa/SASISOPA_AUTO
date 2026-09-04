@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SASISOPA - Inicio</title>
+<style>
+  :root{
+    --bg:#0f1720;
+    --panel:rgba(255,255,255,0.06);
+    --panel-border:rgba(255,255,255,0.12);
+    --accent:#3b82f6;
+    --accent-2:#22c55e;
+    --text:#e5e7eb;
+    --text-dim:#9ca3af;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:'Segoe UI',Roboto,Arial,sans-serif;
+    background:linear-gradient(135deg,#0f1720 0%,#1a2332 100%);
+    color:var(--text);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:40px 16px;
+  }
+  .wrap{
+    width:100%;
+    max-width:480px;
+    text-align:center;
+  }
+  h1{
+    font-size:24px;
+    margin-bottom:6px;
+  }
+  .subtitle{
+    color:var(--text-dim);
+    font-size:13px;
+    margin-bottom:32px;
+  }
+  .opciones{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+  .card-link{
+    display:block;
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    backdrop-filter:blur(10px);
+    border-radius:14px;
+    padding:22px;
+    text-decoration:none;
+    color:var(--text);
+    transition:transform .1s ease, border-color .2s ease;
+  }
+  .card-link:hover{
+    border-color:var(--accent);
+  }
+  .card-link:active{
+    transform:scale(0.98);
+  }
+  .card-title{
+    font-size:17px;
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  .card-desc{
+    font-size:12px;
+    color:var(--text-dim);
+  }
+  .card-link.disabled{
+    opacity:.5;
+    cursor:not-allowed;
+    pointer-events:none;
+  }
+  .badge{
+    display:inline-block;
+    font-size:10px;
+    font-weight:600;
+    color:var(--accent-2);
+    border:1px solid var(--accent-2);
+    border-radius:999px;
+    padding:2px 8px;
+    margin-top:8px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>SASISOPA</h1>
+  <div class="subtitle">Selecciona el formulario que quieres generar</div>
+
+  <div class="opciones">
+    <a class="card-link" href="SASISOPA_1.html">
+      <div class="card-title">SASISOPA 1</div>
+      <div class="card-desc">Generación de documentos (Anexos y Formatos)</div>
+    </a>
+
+    <a class="card-link" href="SASISOPA_2.html">
+      <div class="card-title">SASISOPA 2</div>
+      <div class="card-desc">Próximamente</div>
+      <span class="badge">En construcción</span>
+    </a>
+  </div>
+</div>
+</body>
+</html>
