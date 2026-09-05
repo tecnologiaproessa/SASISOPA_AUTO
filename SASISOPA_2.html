@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SASISOPA 2 - Generación de documentos</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root{
+    --bg:#0f1720;
+    --panel:rgba(255,255,255,0.06);
+    --panel-border:rgba(255,255,255,0.12);
+    --accent:#3b82f6;
+    --accent-2:#22c55e;
+    --text:#e5e7eb;
+    --text-dim:#9ca3af;
+    --danger:#ef4444;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:'Segoe UI',Roboto,Arial,sans-serif;
+    background:linear-gradient(135deg,#0f1720 0%,#1a2332 100%);
+    color:var(--text);
+    display:flex;
+    justify-content:center;
+    padding:40px 16px;
+  }
+  .wrap{
+    width:100%;
+    max-width:760px;
+  }
+  h1{
+    font-size:22px;
+    margin-bottom:4px;
+  }
+  .subtitle{
+    color:var(--text-dim);
+    font-size:13px;
+    margin-bottom:24px;
+  }
+  .card{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    backdrop-filter:blur(10px);
+    border-radius:14px;
+    padding:24px;
+    margin-bottom:20px;
+  }
+  .steps{
+    display:flex;
+    gap:8px;
+    margin-bottom:20px;
+  }
+  .step-dot{
+    flex:1;
+    height:4px;
+    border-radius:2px;
+    background:var(--panel-border);
+  }
+  .step-dot.active{background:var(--accent);}
+  fieldset{
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:16px;
+    margin-bottom:16px;
+  }
+  legend{
+    padding:0 8px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--accent);
+  }
+  label{
+    display:block;
+    font-size:13px;
+    color:var(--text-dim);
+    margin-bottom:6px;
+    margin-top:12px;
+  }
+  label:first-child{margin-top:0;}
+  input[type="text"],
+  input[type="date"]{
+    width:100%;
+    padding:10px 12px;
+    border-radius:8px;
+    border:1px solid var(--panel-border);
+    background:rgba(255,255,255,0.04);
+    color:var(--text);
+    font-size:14px;
+  }
+  input[type="text"]:focus,
+  input[type="date"]:focus{
+    outline:none;
+    border-color:var(--accent);
+  }
+  input[type="file"]{
+    width:100%;
+    font-size:13px;
+    color:var(--text-dim);
+    padding:8px 0;
+  }
+  .file-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:12px 20px;
+    border-radius:9px;
+    border:none;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    transition:transform .1s ease, opacity .2s ease;
+  }
+  .btn:active{transform:scale(0.98);}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-anexo{background:rgba(255,255,255,0.08);border:1px solid var(--panel-border);color:var(--text);width:100%;padding:16px;font-size:15px;}
+  .btn-anexo:hover:not(:disabled){border-color:var(--accent);}
+  .btn-secondary{background:transparent;color:var(--text-dim);border:1px solid var(--panel-border);}
+  .actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-top:8px;
+  }
+  .anexo-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));
+    gap:14px;
+  }
+  @media (max-width:480px){
+    .anexo-grid{grid-template-columns:1fr;}
+  }
+  .anexo-card{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .anexo-title{font-size:15px;font-weight:700;}
+  .status-line{
+    margin-top:10px;
+    font-size:13px;
+    min-height:18px;
+  }
+  .status-ok{color:var(--accent-2);}
+  .status-err{color:var(--danger);}
+  .status-loading{color:var(--text-dim);}
+  .hidden{display:none !important;}
+  .back-link{
+    background:none;
+    border:none;
+    color:var(--text-dim);
+    font-size:13px;
+    cursor:pointer;
+    margin-bottom:16px;
+    padding:0;
+  }
+  .back-link:hover{color:var(--text);}
+  .summary{
+    font-size:12px;
+    color:var(--text-dim);
+    background:rgba(255,255,255,0.03);
+    border-radius:8px;
+    padding:10px 12px;
+    margin-bottom:16px;
+    line-height:1.6;
+  }
+  .summary b{color:var(--text);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>SASISOPA 2 · Generación de documentos</h1>
+  <div class="subtitle">Paso 1: sube los documentos y captura los datos. Paso 2: genera los anexos.</div>
+
+  <div class="steps">
+    <div class="step-dot active" id="dot1"></div>
+    <div class="step-dot" id="dot2"></div>
+  </div>
+
+  <div class="card" id="step1">
+    <fieldset>
+      <legend>Documentos</legend>
+
+      <label>Permiso CRE *</label>
+      <div class="file-row">
+        <input type="file" id="f_permisoCRE" accept="application/pdf">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Datos generales</legend>
+
+      <label>Representante legal *</label>
+      <input type="text" id="representanteLegal" placeholder="Nombre completo">
+
+      <label>Representante técnico *</label>
+      <input type="text" id="representanteTecnico" placeholder="Nombre completo">
+
+      <label>Fecha de aprobación del sistema *</label>
+      <input type="date" id="fechaAprobacion">
+
+      <label>Siglas *</label>
+      <input type="text" id="siglas" placeholder="Ej. ENV">
+
+      <label>Nombre del auditor SASISOPA *</label>
+      <input type="text" id="auditorSasisopa" placeholder="Nombre completo">
+
+      <label>Correo electrónico</label>
+      <input type="text" id="correoElectronico" placeholder="correo@ejemplo.com">
+    </fieldset>
+
+    <fieldset>
+      <legend>Auditoría interna</legend>
+
+      <label>Fecha 1 *</label>
+      <input type="date" id="fecha1">
+
+      <label>Fecha 2 *</label>
+      <input type="date" id="fecha2">
+    </fieldset>
+
+    <fieldset>
+      <legend>Equipos críticos</legend>
+
+      <label>PDF con el listado de equipos críticos</label>
+      <input type="file" id="f_listadoEquiposCriticos" accept="application/pdf">
+    </fieldset>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="btnSiguiente">Siguiente →</button>
+    </div>
+  </div>
+
+
+  <div class="card hidden" id="step2">
+    <button class="back-link" id="btnAtras">← Regresar a editar datos</button>
+
+    <div class="summary" id="resumenDatos"></div>
+
+    <div class="anexo-grid" id="anexoGrid"></div>
+
+    <div class="anexo-card" style="margin-top:16px;">
+      <button class="btn btn-anexo" id="btnAmbos" style="border-color:var(--accent);">Generar todo (ZIP)</button>
+      <div class="status-line" id="statusZip"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+const WEBHOOK_URL = "https://n8n.enviroenergy.com.mx/webhook/b4b3de9d-534c-47be-ba63-ad25e5226a74";
+// ============================================================
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+// Datos extraídos automáticamente del Permiso CRE
+let datosExtraidos = { razonSocial: '', direccion: '' };
+
+const $ = (id) => document.getElementById(id);
+
+// Lista central de documentos que se envían al mismo webhook
+const DOCUMENTOS = [
+  'ANEXO 5',
+  'ANEXO 8',
+  'ANEXO 8.1',
+  'ANEXO 9',
+];
+
+const fileFields = {
+  permisoCRE: $('f_permisoCRE'),
+  listadoEquiposCriticos: $('f_listadoEquiposCriticos'),
+};
+
+function getTextData() {
+  return {
+    representanteLegal: $('representanteLegal').value.trim(),
+    representanteTecnico: $('representanteTecnico').value.trim(),
+    fechaAprobacion: $('fechaAprobacion').value,
+    siglas: $('siglas').value.trim(),
+    auditorSasisopa: $('auditorSasisopa').value.trim(),
+    correoElectronico: $('correoElectronico').value.trim(),
+    fecha1: $('fecha1').value,
+    fecha2: $('fecha2').value,
+  };
+}
+
+async function extraerTextoPDF(file) {
+  const buffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  let texto = '';
+  const maxPaginas = Math.min(pdf.numPages, 3); // los datos suelen estar en las primeras páginas
+  for (let i = 1; i <= maxPaginas; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    for (const item of content.items) {
+      texto += item.str;
+      if (item.hasEOL) texto += '\n';
+    }
+  }
+  return texto;
+}
+
+// Extrae razón social y dirección del texto del Permiso CRE.
+function extraerDatosCRE(texto) {
+  const t = texto.replace(/\s+/g, ' ').trim();
+
+  const reRazonSocial = /autoriza\s+a\s+([A-Za-zÁÉÍÓÚÑáéíóúñ.,\-\s]+?),?\s*para\s+expender/i;
+  const reDireccion = /ubicada\s+en\s+(.+?)[,;]\s*de\s+conformidad\s+con\s+la\s+resoluci[oó]n/i;
+
+  const matchRazon = t.match(reRazonSocial);
+  const matchDireccion = t.match(reDireccion);
+
+  return {
+    razonSocial: matchRazon ? matchRazon[1].trim() : '',
+    direccion: matchDireccion ? matchDireccion[1].trim() : '',
+  };
+}
+
+function validateStep1() {
+  const data = getTextData();
+  const missing = [];
+
+  if (!fileFields.permisoCRE.files[0]) missing.push('Permiso CRE (archivo)');
+  if (!data.representanteLegal) missing.push('Representante legal');
+  if (!data.representanteTecnico) missing.push('Representante técnico');
+  if (!data.fechaAprobacion) missing.push('Fecha de aprobación del sistema');
+  if (!data.siglas) missing.push('Siglas');
+  if (!data.auditorSasisopa) missing.push('Nombre del auditor SASISOPA');
+  if (!data.fecha1) missing.push('Fecha 1 (Auditoría interna)');
+  if (!data.fecha2) missing.push('Fecha 2 (Auditoría interna)');
+
+  if (missing.length) {
+    alert('Faltan campos obligatorios:\n- ' + missing.join('\n- '));
+    return false;
+  }
+  return true;
+}
+
+function formatearFechaDDMMYYYY(fechaISO) {
+  if (!fechaISO) return '';
+  const [anio, mes, dia] = fechaISO.split('-');
+  return `${dia}.${mes}.${anio}`;
+}
+
+function renderResumen() {
+  const d = getTextData();
+  const editando = window.__editandoDatosCRE === true;
+
+  const bloqueRazonDireccion = editando
+    ? `<b>Razón social:</b> <input type="text" id="inputRazonSocial" value="${(datosExtraidos.razonSocial || '').replace(/"/g, '&quot;')}" style="width:60%"><br>` +
+      `<b>Dirección:</b> <input type="text" id="inputDireccion" value="${(datosExtraidos.direccion || '').replace(/"/g, '&quot;')}" style="width:60%"><br>` +
+      `<button type="button" id="btnGuardarDatosCRE" class="btn btn-secondary">Guardar</button>`
+    : `<b>Razón social:</b> ${datosExtraidos.razonSocial || '—'}<br>` +
+      `<b>Dirección:</b> ${datosExtraidos.direccion || '—'}<br>` +
+      `<button type="button" id="btnEditarDatosCRE" class="btn btn-secondary">Editar</button>`;
+
+  $('resumenDatos').innerHTML =
+    `<b>Siglas:</b> ${d.siglas} &nbsp;|&nbsp; ` +
+    `<b>Fecha aprobación:</b> ${formatearFechaDDMMYYYY(d.fechaAprobacion)}<br>` +
+    `<b>Rep. legal:</b> ${d.representanteLegal}<br>` +
+    `<b>Rep. técnico:</b> ${d.representanteTecnico}<br>` +
+    `<b>Auditor SASISOPA:</b> ${d.auditorSasisopa}<br>` +
+    `<b>Correo electrónico:</b> ${d.correoElectronico || '—'}<br>` +
+    `<b>Auditoría interna:</b> ${formatearFechaDDMMYYYY(d.fecha1)} y ${formatearFechaDDMMYYYY(d.fecha2)}<br>` +
+    `<b>Permiso CRE:</b> ${fileFields.permisoCRE.files[0]?.name || '—'}<br>` +
+    `<b>Listado equipos críticos:</b> ${fileFields.listadoEquiposCriticos.files[0]?.name || '—'}<br>` +
+    bloqueRazonDireccion;
+
+  if (editando) {
+    $('btnGuardarDatosCRE').addEventListener('click', () => {
+      datosExtraidos.razonSocial = $('inputRazonSocial').value;
+      datosExtraidos.direccion = $('inputDireccion').value;
+      window.__editandoDatosCRE = false;
+      renderResumen();
+    });
+  } else {
+    $('btnEditarDatosCRE').addEventListener('click', () => {
+      window.__editandoDatosCRE = true;
+      renderResumen();
+    });
+  }
+}
+
+$('btnSiguiente').addEventListener('click', async () => {
+  if (!validateStep1()) return;
+
+  const btn = $('btnSiguiente');
+  const textoOriginal = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Leyendo Permiso CRE…';
+
+  try {
+    const texto = await extraerTextoPDF(fileFields.permisoCRE.files[0]);
+    const datos = extraerDatosCRE(texto);
+
+    if (!datos.razonSocial || !datos.direccion) {
+      alert(
+        'No se pudo extraer automáticamente la razón social y/o la dirección del Permiso CRE.\n' +
+        'Verifica que el PDF tenga texto seleccionable (que no sea una imagen escaneada) y vuelve a intentar.'
+      );
+      return;
+    }
+
+    datosExtraidos = datos;
+    renderResumen();
+    $('step1').classList.add('hidden');
+    $('step2').classList.remove('hidden');
+    $('dot1').classList.remove('active');
+    $('dot2').classList.add('active');
+  } catch (err) {
+    alert('Error al leer el Permiso CRE: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = textoOriginal;
+  }
+});
+
+$('btnAtras').addEventListener('click', () => {
+  $('step2').classList.add('hidden');
+  $('step1').classList.remove('hidden');
+  $('dot2').classList.remove('active');
+  $('dot1').classList.add('active');
+});
+
+function buildAnexoFormData(docName) {
+  const d = getTextData();
+  const fd = new FormData();
+  fd.append('doc_name', docName);
+
+  if (docName === 'ANEXO 5') {
+    fd.append('razonSocial', datosExtraidos.razonSocial);
+    fd.append('fechaAprobacion', formatearFechaDDMMYYYY(d.fechaAprobacion));
+    fd.append('direccion', datosExtraidos.direccion);
+    fd.append('correoElectronico', d.correoElectronico);
+  }
+
+  if (docName === 'ANEXO 8' || docName === 'ANEXO 8.1') {
+    fd.append('razonSocial', datosExtraidos.razonSocial);
+    fd.append('fechaAprobacion', formatearFechaDDMMYYYY(d.fechaAprobacion));
+    fd.append('direccion', datosExtraidos.direccion);
+  }
+
+  if (docName === 'ANEXO 9') {
+    fd.append('razonSocial', datosExtraidos.razonSocial);
+    fd.append('fechaAprobacion', formatearFechaDDMMYYYY(d.fechaAprobacion));
+    fd.append('direccion', datosExtraidos.direccion);
+    fd.append('rep_legal', d.representanteLegal);
+  }
+
+  return fd;
+}
+
+async function pedirAnexo(docName) {
+  const fd = buildAnexoFormData(docName);
+  const res = await fetch(WEBHOOK_URL, {
+    method: 'POST',
+    body: fd,
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status + ' (' + docName + ')');
+  const blob = await res.blob();
+  if (!blob || blob.size === 0) {
+    throw new Error(docName + ': respuesta vacía ');
+  }
+  return blob;
+}
+
+function descargarBlob(blob, filename) {
+  const blobUrl = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(blobUrl);
+}
+
+async function enviarAnexo(docName, statusElId, btnEl) {
+  const statusEl = $(statusElId);
+
+  btnEl.disabled = true;
+  statusEl.className = 'status-line status-loading';
+  statusEl.textContent = 'Enviando…';
+
+  try {
+    const blob = await pedirAnexo(docName);
+    descargarBlob(blob, docName.replace(/\s+/g, '_') + '.docx');
+    statusEl.className = 'status-line status-ok';
+    statusEl.textContent = '✓ Word descargado';
+  } catch (err) {
+    statusEl.className = 'status-line status-err';
+    statusEl.textContent = '✗ Error al enviar: ' + err.message;
+  } finally {
+    btnEl.disabled = false;
+  }
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function esErrorRateLimit(err) {
+  const msg = (err && err.message ? err.message : '').toLowerCase();
+  return msg.includes('429') || msg.includes('too many requests') || msg.includes('rate limit');
+}
+
+const PAUSA_ENTRE_DOCS_MS = 500; // pausa normal entre cada documento
+const PAUSA_RATE_LIMIT_MS = 5000; // pausa extra
+const MAX_REINTENTOS = 6;
+
+// Pide un documento con reintentos automáticos si el backend responde rate limit.
+async function pedirAnexoConReintento(docName, statusEl, indice, total) {
+  for (let intento = 1; intento <= MAX_REINTENTOS; intento++) {
+    try {
+      return await pedirAnexo(docName);
+    } catch (err) {
+      const esRateLimit = esErrorRateLimit(err);
+      const esUltimoIntento = intento === MAX_REINTENTOS;
+      if (!esRateLimit || esUltimoIntento) {
+        throw err;
+      }
+      statusEl.textContent = `(${indice}/${total}) ${docName}: límite alcanzado, reintentando en ${PAUSA_RATE_LIMIT_MS / 1000}s (intento ${intento}/${MAX_REINTENTOS})…`;
+      await sleep(PAUSA_RATE_LIMIT_MS);
+    }
+  }
+}
+
+async function procesarLista(nombres, statusEl, etiquetaPasada) {
+  const exitosos = [];
+  const fallidos = [];
+
+  for (let i = 0; i < nombres.length; i++) {
+    const docName = nombres[i];
+    statusEl.textContent = `${etiquetaPasada}(${i + 1}/${nombres.length}): ${docName}…`;
+    try {
+      const blob = await pedirAnexoConReintento(docName, statusEl, i + 1, nombres.length);
+      exitosos.push({ docName, blob });
+    } catch (err) {
+      fallidos.push(docName);
+    }
+
+    if (i < nombres.length - 1) {
+      await sleep(PAUSA_ENTRE_DOCS_MS);
+    }
+  }
+
+  return { exitosos, fallidos };
+}
+
+const MAX_PASADAS_ZIP = 5;
+
+async function enviarTodoZip(statusElId, btnEl) {
+  const statusEl = $(statusElId);
+
+  btnEl.disabled = true;
+  statusEl.className = 'status-line status-loading';
+
+  try {
+    const primeraPasada = await procesarLista(DOCUMENTOS, statusEl, 'Generando ');
+    let exitosos = primeraPasada.exitosos;
+    let fallidos = primeraPasada.fallidos;
+
+    let pasada = 1;
+    while (fallidos.length > 0 && pasada < MAX_PASADAS_ZIP) {
+      pasada++;
+      statusEl.textContent = `Reintentando ${fallidos.length} documento(s) que fallaron (pasada ${pasada}/${MAX_PASADAS_ZIP})…`;
+      await sleep(PAUSA_RATE_LIMIT_MS);
+      const resultado = await procesarLista(fallidos, statusEl, `Reintentando (pasada ${pasada}) `);
+      exitosos = exitosos.concat(resultado.exitosos);
+      fallidos = resultado.fallidos;
+    }
+
+    if (exitosos.length === 0) {
+      throw new Error('Ningún documento generó contenido.');
+    }
+
+    statusEl.textContent = 'Comprimiendo…';
+
+    const zip = new JSZip();
+    exitosos.forEach(({ docName, blob }) => {
+      zip.file(docName.replace(/\s+/g, '_') + '.docx', blob);
+    });
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+    const siglas = $('siglas').value.trim() || 'ANEXOS';
+    descargarBlob(zipBlob, `${siglas}_sasisopa2.zip`);
+
+    if (fallidos.length === 0) {
+      statusEl.className = 'status-line status-ok';
+      statusEl.textContent = `✓ ZIP descargado (${exitosos.length}/${DOCUMENTOS.length})`;
+    } else {
+      statusEl.className = 'status-line status-err';
+      statusEl.textContent = `⚠ ZIP descargado con ${exitosos.length}/${DOCUMENTOS.length}. Faltan: ${fallidos.join(', ')}`;
+    }
+  } catch (err) {
+    statusEl.className = 'status-line status-err';
+    statusEl.textContent = '✗ Error al generar ZIP: ' + err.message;
+  } finally {
+    btnEl.disabled = false;
+  }
+}
+
+function renderTarjetasDocumentos() {
+  const grid = $('anexoGrid');
+  grid.innerHTML = '';
+  DOCUMENTOS.forEach((docName) => {
+    const slug = docName.replace(/\s+/g, '');
+    const card = document.createElement('div');
+    card.className = 'anexo-card';
+    card.innerHTML = `
+      <div class="anexo-title">${docName}</div>
+      <button class="btn btn-anexo" id="btn_${slug}">Generar ${docName}</button>
+      <div class="status-line" id="status_${slug}"></div>
+    `;
+    grid.appendChild(card);
+    $(`btn_${slug}`).addEventListener('click', () => {
+      enviarAnexo(docName, `status_${slug}`, $(`btn_${slug}`));
+    });
+  });
+}
+
+renderTarjetasDocumentos();
+
+$('btnAmbos').addEventListener('click', () => {
+  enviarTodoZip('statusZip', $('btnAmbos'));
+});
+</script>
+</body>
+</html>
