@@ -275,6 +275,13 @@ const DOCUMENTOS = [
   'ANEXO 8',
   'ANEXO 8.1',
   'ANEXO 9',
+  'FORMATO 2',
+  'FORMATO 11',
+  'FORMATO 23',
+  'FORMATO 28',
+  'FORMATO 32',
+  'FORMATO 34',
+  'FORMATO 35',
 ];
 
 const fileFields = {
@@ -456,6 +463,40 @@ function buildAnexoFormData(docName) {
     fd.append('fechaAprobacion', formatearFechaDDMMYYYY(d.fechaAprobacion));
     fd.append('direccion', datosExtraidos.direccion);
     fd.append('rep_legal', d.representanteLegal);
+  }
+
+  if (docName === 'FORMATO 2') {
+    fd.append('razonSocial', datosExtraidos.razonSocial);
+    fd.append('fechaAprobacion', formatearFechaDDMMYYYY(d.fechaAprobacion));
+    fd.append('direccion', datosExtraidos.direccion);
+    fd.append('siglas', d.siglas);
+    fd.append('representanteTecnico', d.representanteTecnico);
+    fd.append('representanteLegal', d.representanteLegal);
+  }
+
+  if (docName === 'FORMATO 11' || docName === 'FORMATO 23' || docName === 'FORMATO 28' || docName === 'FORMATO 35') {
+    fd.append('razonSocial', datosExtraidos.razonSocial);
+    fd.append('fechaAprobacion', formatearFechaDDMMYYYY(d.fechaAprobacion));
+    fd.append('direccion', datosExtraidos.direccion);
+    fd.append('siglas', d.siglas);
+  }
+
+  if (docName === 'FORMATO 32') {
+    fd.append('razonSocial', datosExtraidos.razonSocial);
+    fd.append('fechaAprobacion', formatearFechaDDMMYYYY(d.fechaAprobacion));
+    fd.append('direccion', datosExtraidos.direccion);
+    fd.append('siglas', d.siglas);
+    fd.append('auditorSasisopa', d.auditorSasisopa);
+  }
+
+  if (docName === 'FORMATO 34') {
+    fd.append('razonSocial', datosExtraidos.razonSocial);
+    fd.append('fechaAprobacion', formatearFechaDDMMYYYY(d.fechaAprobacion));
+    fd.append('direccion', datosExtraidos.direccion);
+    fd.append('siglas', d.siglas);
+    fd.append('representanteTecnico', d.representanteTecnico);
+    fd.append('representanteLegal', d.representanteLegal);
+    fd.append('auditorSasisopa', d.auditorSasisopa);
   }
 
   return fd;
